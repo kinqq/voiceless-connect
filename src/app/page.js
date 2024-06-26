@@ -11,6 +11,9 @@ export default function Home() {
   const [testImg, setTestImg] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [devInterval, setDevInterval] = useState(0);
+  const [devCount, setDevCount] = useState(0);
+
   useEffect(() => {
     const loadModel = async () => {
       const modelURL =
@@ -149,6 +152,18 @@ export default function Home() {
     console.log(prediction);
   };
 
+  const autoExport = () => {
+    let count = devCount;
+    const interval = setInterval(() => {
+      if (count <= 0) {
+        clearInterval(interval);
+        return;
+      }
+      exportCanvas();
+      count--;
+    }, devInterval * 1000);
+  };
+
   return (
     <>
       <div className="flex justify-start p-2 space-x-2 min-w-full">
@@ -172,6 +187,27 @@ export default function Home() {
             Predict
           </button>
         )}
+      </div>
+      <div>
+        개발자 옵션 (첫번째가 초 간격, 두번째가 횟수, 실행 버튼 누르면 초 간격
+        이후부터 캡쳐 시작)
+      </div>
+      <div>
+        <input
+          type="number"
+          placeholder="초 간격"
+          value={devInterval}
+          onChange={(e) => setDevInterval(e.target.valueAsNumber)}
+        />
+        <input
+          type="number"
+          placeholder="횟수"
+          value={devCount}
+          onChange={(e) => setDevCount(e.target.valueAsNumber)}
+        />
+        <button onClick={autoExport} className="border-black border-1">
+          자동 캡쳐 실행
+        </button>
       </div>
       <div className="flex justify-start gap-4 ">
         {testImg && (
