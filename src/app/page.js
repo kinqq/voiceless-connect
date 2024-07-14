@@ -17,7 +17,7 @@ export default function Home() {
   useEffect(() => {
     const loadModel = async () => {
       const modelURL =
-        "https://teachablemachine.withgoogle.com/models/enIZ_4AU-/";
+        "https://teachablemachine.withgoogle.com/models/YaBFd3kIq/";
       const tfModel = await tmImage.load(
         modelURL + "model.json",
         modelURL + "metadata.json"
@@ -102,8 +102,55 @@ export default function Home() {
       width = Math.min(x2 - x1 + margin * 2, WIDTH - x1),
       height = Math.min(y2 - y1 + margin * 2, HEIGHT - y1);
 
-    return jsImage.crop({ x, y, width, height });
+    return resizeImageWithPadding(jsImage.crop({ x, y, width, height }));
   };
+
+  function resizeImageWithPadding(
+    inputImage,
+    size = 212,
+    padColor = [255, 255, 255, 255]
+  ) {
+    // Calculate the aspect ratio of the input image
+    const aspectRatio = inputImage.width / inputImage.height;
+
+    // Determine the dimensions of the resized image
+    let newWidth, newHeight;
+    if (aspectRatio > 1) {
+      // Image is wider than tall
+      newWidth = size;
+      newHeight = Math.round(size / aspectRatio);
+    } else {
+      // Image is taller than wide or square
+      newWidth = Math.round(size * aspectRatio);
+      newHeight = size;
+    }
+
+    // Resize the image while maintaining the aspect ratio
+    const resizedImage = inputImage.resize({
+      width: newWidth,
+      height: newHeight,
+    });
+
+    // Create a new blank image with the desired size
+    const paddedImage = new Image(size, size);
+
+    // Fill the new image with the padding color
+    for (let i = 0; i < paddedImage.data.length; i += 4) {
+      paddedImage.data[i] = padColor[0]; // Red
+      paddedImage.data[i + 1] = padColor[1]; // Green
+      paddedImage.data[i + 2] = padColor[2]; // Blue
+      paddedImage.data[i + 3] = padColor[3]; // Alpha
+    }
+
+    // Calculate the position to center the resized image on the new canvas
+    const xOffset = Math.floor((size - newWidth) / 2);
+    const yOffset = Math.floor((size - newHeight) / 2);
+
+    // Paste the resized image onto the padded image
+    paddedImage.insert(resizedImage, { x: xOffset, y: yOffset, inPlace: true });
+
+    return paddedImage;
+  }
 
   const canvas = useRef();
   const clearCanvas = () => {
@@ -187,27 +234,6 @@ export default function Home() {
             Predict
           </button>
         )}
-      </div>
-      <div>
-        개발자 옵션 (첫번째가 초 간격, 두번째가 횟수, 실행 버튼 누르면 초 간격
-        이후부터 캡쳐 시작)
-      </div>
-      <div>
-        <input
-          type="number"
-          placeholder="초 간격"
-          value={devInterval}
-          onChange={(e) => setDevInterval(e.target.valueAsNumber)}
-        />
-        <input
-          type="number"
-          placeholder="횟수"
-          value={devCount}
-          onChange={(e) => setDevCount(e.target.valueAsNumber)}
-        />
-        <button onClick={autoExport} className="border-black border-1">
-          자동 캡쳐 실행
-        </button>
       </div>
       <div className="flex justify-start gap-4 ">
         {testImg && (
